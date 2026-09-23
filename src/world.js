@@ -314,66 +314,6 @@ function scatter(scene, detail) {
     scene.add(mesh);
   }
 }
-function pineCrownGeometry() {
-  const p = [], cols = [], ids = [], sides = 24;
-  const rows = [[0, .12], [.12, .62], [.31, .93], [.51, 1], [.7, .83], [.87, .55], [1, .05]];
-  for (let j = 0; j < rows.length; j++) for (let i = 0; i <= sides; i++) {
-    const a = i / sides * TAU, lobe = 1 + .13 * Math.sin(a * 7 + .5 + j * .18) + .09 * Math.sin(a * 13 - j * .8);
-    p.push(Math.cos(a) * rows[j][1] * lobe, rows[j][0] + .055 * Math.sin(a * 9 + j * 3), Math.sin(a) * rows[j][1] * lobe);
-    const c = color('#b2c2a3').multiplyScalar(.67 + rows[j][0] * .39 + .07 * Math.sin(a * 7));
-    cols.push(c.r, c.g, c.b);
-    if (j < rows.length - 1 && i < sides) {
-      const k = j * (sides + 1) + i;
-      ids.push(k, k + sides + 1, k + 1, k + 1, k + sides + 1, k + sides + 2);
-    }
-  }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
-  g.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
-  g.setIndex(ids); g.computeVertexNormals(); return g;
-}
-function coastalPines(scene, detail) {
-  const total = detail ? 265 : 125;
-  const wood = new THREE.InstancedMesh(new THREE.CylinderGeometry(.14, .26, 1, 9), new THREE.MeshStandardMaterial({ color: '#776e5e', roughness: 1 }), total);
-  const branch = new THREE.InstancedMesh(new THREE.CylinderGeometry(.045, .13, 1, 6), wood.material, total * 3);
-  const foliage = new THREE.InstancedMesh(pineCrownGeometry(), new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 1 }), total * 3);
-  const dummy = new THREE.Object3D(), axis = new THREE.Vector3(0, 1, 0);
-  const from = new THREE.Vector3(), to = new THREE.Vector3(), direction = new THREE.Vector3();
-  let count = 0, attempts = 0;
-  while (count < total && attempts++ < total * 50) {
-    const x = (random() - .5) * 940, z = (random() - .5) * 940;
-    const y = groundHeight(x, z), near = nearestRoad(x, z);
-    if (y < 16 || y > 154 || near.distance < 18 || near.distance > 205) continue;
-    if (noise(x * .012, z * .012) < .44) continue;
-    const h = 6 + random() * 6, span = 2.6 + random() * 2.4, angle = random() * TAU;
-    dummy.rotation.set(0, angle, (random() - .5) * .065);
-    dummy.position.set(x, y + h * .4, z);
-    dummy.scale.set(1, h * .8, 1); dummy.updateMatrix(); wood.setMatrixAt(count, dummy.matrix);
-    for (let k = 0; k < 3; k++) {
-      const a = angle + k * TAU / 3 + .3, reach = span * (k === 0 ? .38 : .55);
-      const cx = x + Math.cos(a) * reach, cz = z + Math.sin(a) * reach;
-      const cy = y + h * (.55 + .05 * k);
-      from.set(x, y + h * (.51 + .055 * k), z);
-      to.set(cx, cy + .2, cz);
-      direction.subVectors(to, from);
-      dummy.position.copy(from).add(to).multiplyScalar(.5);
-      dummy.quaternion.setFromUnitVectors(axis, direction.clone().normalize());
-      dummy.scale.set(1, direction.length(), 1); dummy.updateMatrix(); branch.setMatrixAt(count * 3 + k, dummy.matrix);
-      dummy.position.set(cx, cy, cz); dummy.quaternion.identity(); dummy.rotation.y = a;
-      dummy.scale.set(span * (k === 0 ? 1 : .82), h * .46, span * (k === 0 ? .87 : .79));
-      dummy.updateMatrix(); foliage.setMatrixAt(count * 3 + k, dummy.matrix);
-      foliage.setColorAt(count * 3 + k, color('#8a9a81').multiplyScalar(.83 + random() * .25));
-    }
-    count++;
-  }
-  wood.count = count; branch.count = foliage.count = count * 3;
-  for (const mesh of [wood, branch, foliage]) {
-    mesh.instanceMatrix.needsUpdate = true;
-    mesh.userData.fullCount = mesh.count; (scene.userData.scatter ||= []).push(mesh);
-    scene.add(mesh);
-  }
-  foliage.instanceColor.needsUpdate = true;
-}
 function shoreline(scene) {
   const white = new THREE.MeshBasicMaterial({ color: '#dcece2', transparent: true, opacity: .43, depthWrite: false, side: THREE.DoubleSide });
   const pos = [], ids = [];
@@ -541,6 +481,7 @@ export function buildWorld(scene, detail = true) {
   scene.add(new THREE.HemisphereLight('#e1eeed', '#9b755a', 2.15));
   const sun = new THREE.DirectionalLight('#fff0d6', 2.75); sun.position.set(-470, 420, -640); scene.add(sun);
   const time = skyAndSea(scene);
-  terrain(scene, detail); road(scene); guardrail(scene); shoreline(scene); scatter(scene, detail); coastalPines(scene, detail); distantIslands(scene); seaStacks(scene); signs(scene);
+  terrain(scene, detail); road(scene); guardrail(scene); shoreline(scene); scatter(scene, detail);
+  distantIslands(scene); seaStacks(scene); signs(scene);
   return { time, routeLength, drawCalls: scene.children.length };
 }
