@@ -16,9 +16,9 @@ renderer.xr.setFoveation(.55);
 document.querySelector('#app').appendChild(renderer.domElement);
 
 const rig = new THREE.Group(); scene.add(rig);
-const camera = new THREE.PerspectiveCamera(74, window.innerWidth / window.innerHeight, .07, 3200);
+const camera = new THREE.PerspectiveCamera(74, window.innerWidth / window.innerHeight, .08, 7200);
 camera.rotation.order = 'YXZ'; camera.position.y = 1.68; rig.add(camera);
-const start = route[0];
+const start = route[420];
 rig.position.copy(start.p).addScaledVector(start.side, -2.5);
 camera.rotation.y = Math.atan2(-start.tangent.x, -start.tangent.z);
 rig.position.y = start.p.y + .02;
@@ -35,10 +35,11 @@ function begin() {
 }
 document.querySelector('#explore').addEventListener('click', begin);
 
-if ('xr' in navigator) {
+if (navigator.xr?.isSessionSupported) navigator.xr.isSessionSupported('immersive-vr').then(supported => {
+  if (!supported) return;
   const button = VRButton.createButton(renderer, { optionalFeatures: ['bounded-floor'] });
   button.id = 'VRButton'; document.body.appendChild(button);
-}
+}).catch(() => {});
 renderer.xr.addEventListener('sessionstart', () => {
   begin(); document.querySelector('#vr-help').style.display = 'block';
   document.querySelector('#desktop-help').style.display = 'none';
