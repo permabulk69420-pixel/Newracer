@@ -503,7 +503,9 @@ function skyAndSea(scene) {
   sky.renderOrder = -100;
   const cameraPosition = new THREE.Vector3();
   sky.onBeforeRender = (_renderer, _scene, camera) => {
-    sky.position.copy(camera.getWorldPosition(cameraPosition));
+    // XR eye cameras have their world matrices set by WebXRManager. Calling
+    // getWorldPosition() here would overwrite that matrix from local pose.
+    sky.position.copy(cameraPosition.setFromMatrixPosition(camera.matrixWorld));
     sky.updateMatrixWorld();
   };
   scene.add(sky);

@@ -22,6 +22,7 @@ const start = route[420];
 rig.position.copy(start.p).addScaledVector(start.side, -2.5);
 camera.rotation.y = Math.atan2(-start.tangent.x, -start.tangent.z);
 rig.position.y = start.p.y + .02;
+const spawnPosition = rig.position.clone();
 
 // World generation is deliberately synchronous, so the first rendered frame
 // contains the full coastline rather than objects popping in during movement.
@@ -30,6 +31,7 @@ const loading = document.querySelector('#loading');
 const intro = document.querySelector('#intro');
 const hud = document.querySelector('#hud');
 let started = false, highDetail = true;
+let xrPlacementPending = false;
 function begin() {
   started = true; intro.classList.add('dismissed'); hud.classList.remove('hidden');
 }
@@ -41,12 +43,14 @@ if (navigator.xr?.isSessionSupported) navigator.xr.isSessionSupported('immersive
   button.id = 'VRButton'; document.body.appendChild(button);
 }).catch(() => {});
 renderer.xr.addEventListener('sessionstart', () => {
+  xrPlacementPending = true;
   begin(); document.querySelector('#vr-help').style.display = 'block';
   document.querySelector('#desktop-help').style.display = 'none';
   // Leave the Quest's eye resolution to the WebXR runtime and use foveation.
   renderer.xr.setFoveation(.55);
 });
 renderer.xr.addEventListener('sessionend', () => {
+  xrPlacementPending = false;
   document.querySelector('#vr-help').style.display = 'none';
   document.querySelector('#desktop-help').style.display = '';
 });
@@ -131,6 +135,22 @@ function animate() {
   world.time.value = elapsed;
   if (started || renderer.xr.isPresenting) {
     const xr = renderer.xr.isPresenting;
+    if (xr && xrPlacementPending) {
+      const eye = renderer.xr.getCamera(camera).cameras[0];
+      if (eye) {
+        // A floor reference space can have a room-scale X/Z offset, and the
+        // headset's physical forward can differ from the desktop camera yaw.
+        // Place the tracked EYE on the road, facing the track, on first pose.
+        forward.set(0, 0, -1).applyQuaternion(eye.quaternion);
+        const headsetYaw = Math.atan2(-forward.x, -forward.z);
+        rig.rotation.y = Math.atan2(-start.tangent.x, -start.tangent.z) - headsetYaw;
+        const cos = Math.cos(rig.rotation.y), sin = Math.sin(rig.rotation.y);
+        rig.position.copy(spawnPosition);
+        rig.position.x -= cos * eye.position.x + sin * eye.position.z;
+        rig.position.z -= -sin * eye.position.x + cos * eye.position.z;
+        xrPlacementPending = false;
+      }
+    }
     const input = xr ? xrInput() : {
       moveX: (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0) + movePad.x,
       moveY: (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0) - (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) + movePad.y,
@@ -141,7 +161,10 @@ function animate() {
       camera.rotation.y -= input.turn * dt * 2.3;
       camera.rotation.x = THREE.MathUtils.clamp(camera.rotation.x - lookPad.y * dt * 1.45, -1.46, 1.46);
     }
-    (xr ? renderer.xr.getCamera(camera) : camera).getWorldDirection(forward);
+    // The XR ArrayCamera has no parent. Calling getWorldDirection() on it
+    // rebuilds its world matrix without the rig, so movement ignores turning.
+    // Three.js updates our child camera from the headset pose each XR frame.
+    camera.getWorldDirection(forward);
     forward.y = 0; forward.normalize(); right.crossVectors(forward, up).normalize();
     const x = input.moveX, y = input.moveY, length = Math.max(1, Math.hypot(x, y));
     const speed = input.sprint ? 32 : 16;
@@ -149,7 +172,18 @@ function animate() {
     rig.position.addScaledVector(forward, -y / length * speed * dt);
     rig.position.x = THREE.MathUtils.clamp(rig.position.x, -1850, 1850);
     rig.position.z = THREE.MathUtils.clamp(rig.position.z, -1850, 1850);
-    const floor = floorAt(rig.position.x, rig.position.z);
+    let floor = floorAt(rig.position.x, rig.position.z);
+    if (xr) {
+      const eye = renderer.xr.getCamera(camera).cameras[0];
+      if (eye) {
+        // Use the tracked eye's actual offset from the rig. Room-scale motion
+        // and seated/floor calibration can otherwise put the view in terrain.
+        const yaw = rig.rotation.y, cos = Math.cos(yaw), sin = Math.sin(yaw);
+        const eyeX = rig.position.x + cos * eye.position.x + sin * eye.position.z;
+        const eyeZ = rig.position.z - sin * eye.position.x + cos * eye.position.z;
+        floor = floorAt(eyeX, eyeZ) + Math.max(0, 1.15 - eye.position.y);
+      }
+    }
     rig.position.y = floor > rig.position.y ? floor : THREE.MathUtils.damp(rig.position.y, floor, 13, dt);
     labelTimer += dt;
     if (labelTimer > .55) {
