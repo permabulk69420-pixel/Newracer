@@ -121,7 +121,9 @@ function xrInput() {
 }
 function floorAt(x, z) {
   const nearby = nearestRoad(x, z);
-  return nearby.sample && nearby.distance < 7.4 ? nearby.sample.p.y + .03 : Math.max(-8.9, groundHeight(x, z));
+  return nearby.sample && nearby.distance < 7.4
+    ? nearby.sample.p.y + (nearby.distance < 5.85 ? .13 : .01)
+    : Math.max(-8.9, groundHeight(x, z));
 }
 let labelTimer = 0;
 function animate() {

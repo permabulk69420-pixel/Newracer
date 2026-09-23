@@ -1,6 +1,6 @@
 # Azure Pass
 
-A single coastal mountain circuit for Newracer, designed as an environment first. The road is a continuous closed loop for a future car. The island, asphalt, markings, guardrails, rocks, shrubs, water and sky are generated in code; there are no external 3D assets. The published bundle contains Three.js and runs as a static page.
+A single coastal mountain circuit for Newracer, designed as an environment first. The road is a continuous closed loop for a future car. The terrain, road, plants, rocks, water and sky geometry are generated in code. The static bundle includes three photographed surface images and Three.js; it makes no third-party asset requests at runtime.
 
 **[Open the track](https://permabulk69420-pixel.github.io/Newracer/)** (GitHub Pages)
 
@@ -12,6 +12,10 @@ A single coastal mountain circuit for Newracer, designed as an environment first
 - **Detail:** the on-screen toggle reduces resolution and scenery instances if needed. VR also raises fixed foveation in Eco mode.
 
 The scene avoids dynamic shadows and post-processing. The track, barriers and terrain are static meshes; rocks and plants use instancing. Water is a single lightweight shader plane. This first pass still needs a frame-rate check in an actual Quest 3 headset.
+
+## Surface image sources
+
+The bundled asphalt comes from [Asphalt 02](https://polyhaven.com/a/asphalt_02), dry ground from [Dry Ground Rocks](https://polyhaven.com/a/dry_ground_rocks), and cliff rock from [Aerial Rocks 02](https://polyhaven.com/a/aerial_rocks_02), all by Rob Tuytel / Poly Haven under [CC0](https://polyhaven.com/license). They are 512 px derivatives of the sources listed in [RCForge's scenery credits](https://github.com/adithya-s-k/RCForge/blob/main/public/scenery/README.md).
 
 ## Run locally
 
