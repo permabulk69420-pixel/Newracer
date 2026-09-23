@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#a4b8bb" />
+    <meta name="description" content="A coastal mountain road built for Quest 3. Explore the landscape on foot in VR." />
+    <title>AZURE PASS — Newracer</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="intro" class="intro">
+      <div class="intro-inner">
+        <div class="eyebrow">NEWRACER / ENVIRONMENT 01</div>
+        <h1>AZURE<br /><em>PASS</em></h1>
+        <p>A mountain road above the sea. Walk the circuit, take the overlook, and come back with a car later.</p>
+        <button id="explore" class="primary">EXPLORE THE COAST <span>↗</span></button>
+        <div class="intro-foot">DESKTOP · WASD + MOUSE &nbsp; / &nbsp; QUEST 3 · BOTH THUMBSTICKS</div>
+      </div>
+      <div class="intro-index">01 — COASTAL CIRCUIT</div>
+    </div>
+    <div id="hud" class="hud hidden">
+      <div class="hud-top"><span class="brand">AZURE <b>PASS</b></span><span id="position">COAST ROAD</span></div>
+      <div class="hud-bottom">
+        <div class="controls" id="desktop-help">WASD MOVE &nbsp;·&nbsp; SHIFT SPRINT &nbsp;·&nbsp; MOUSE LOOK &nbsp;·&nbsp; ESC RELEASE</div>
+        <div class="controls" id="vr-help">LEFT STICK MOVE &nbsp;·&nbsp; RIGHT STICK TURN &nbsp;·&nbsp; GRIP SPRINT</div>
+        <button id="quality" title="Switch graphics detail">DETAIL: HIGH</button>
+      </div>
+      <div id="mobile-controls" class="mobile-controls">
+        <div id="move-pad" class="pad"><span id="move-knob"></span><small>MOVE</small></div>
+        <div id="look-pad" class="pad"><span id="look-knob"></span><small>LOOK</small></div>
+        <button id="run-button" class="run-button">RUN</button>
+      </div>
+    </div>
+    <div id="loading" class="loading">SCULPTING THE COAST<span>…</span></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
